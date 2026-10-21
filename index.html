@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Deadlock Theorycrafter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Deadlock Theorycrafter</h1>
+
+  <label>Hero: <select id="hero"></select></label>
+
+  <p>Build:</p>
+  <div id="items"></div>
+
+  <section class="panel">
+    <h2>Shop</h2>
+    <div id="shop"></div>
+  </section>
+
+  <div class="panels">
+    <section class="panel">
+      <h2>Investment</h2>
+      <table id="invest"></table>
+    </section>
+    <section class="panel">
+      <h2>Stats</h2>
+      <table id="stats"></table>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Abilities</h2>
+    <div id="abilities"></div>
+  </section>
+
+  <footer class="disclaimer">
+    Deadlock and its art belong to Valve Corporation. This is an unofficial fan tool and is not affiliated with or endorsed by Valve.
+  </footer>
+
+  <!-- Scripts go last, so every element above exists before app.js looks for it -->
+  <script src="Engine.js"></script>
+  <script src="itemImages.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
