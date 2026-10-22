@@ -204,7 +204,7 @@ tabs.forEach(tab => tab.addEventListener("click", () => {
     tabPanels.forEach(p => p.classList.remove("active"));
 
     tab.classList.add("active");
-    document.querySelector("#" + tab-data.target).classList.add("active");
+    document.querySelector("#" + tab.dataset.target).classList.add("active");
 
 }));
 heroSelect.addEventListener("change", update);
