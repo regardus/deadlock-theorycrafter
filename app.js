@@ -195,7 +195,18 @@ function update() {
             .join("<br>");
     });
 }
+//---- Tabs ----
+const tabs = document.querySelectorAll(".tab");
+const tabPanels = document.querySelectorAll(".tab-panel");
 
+tabs.forEach(tab => tab.addEventListener("click", () => {
+    tabs.forEach(t => t.classList.remove("active"));
+    tabPanels.forEach(p => p.classList.remove("active"));
+
+    tab.classList.add("active");
+    document.querySelector("#" + tab-data.target).classList.add("active");
+
+}));
 heroSelect.addEventListener("change", update);
 update();
 
