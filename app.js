@@ -1,28 +1,35 @@
 const heroSelect = document.querySelector("#hero");
+const enemySelect = document.querySelector("#enemy-hero");
 const itemsBox = document.querySelector("#items");
-const itemSelects = []
 const STAT_DISPLAY = {
   // Vitality
-  hp:           { label: "Health" },
-  hpRegen:      { label: "Health Regen", unit: "/s" },
-  bulletResist: { label: "Bullet Resist", pct: true },
-  spiritResist: { label: "Spirit Resist", pct: true },
+  hp:           { label: "Health", group: "Vitality" },
+  hpRegen:      { label: "Health Regen", unit: "/s", group: "Vitality" },
+  //Resistances
+  bulletResist: { label: "Bullet Resist", pct: true, group: "Resistances" },
+  spiritResist: { label: "Spirit Resist", pct: true, group: "Resistances" },
+  debuffResistance: { label: "Debuff Resist", pct: true, group: "Resistances" },
   // Weapon
-  bulletDmg:    { label: "Bullet Damage" },
-  bulletPerSec: { label: "Bullets / sec" },
-  ammo:         { label: "Ammo" },
-  weaponPct:    { label: "Weapon Damage Bonus", pct: true },
-  lightMelee:   { label: "Light Melee" },
-  heavyMelee:   { label: "Heavy Melee" },
+  bulletDmg:    { label: "Bullet Damage", group: "Weapon" },
+  bulletPerSec: { label: "Bullets / sec", group: "Weapon" },
+  ammo:         { label: "Ammo", group: "Weapon" },
+  weaponPct:    { label: "Weapon Damage Bonus", pct: true, group: "Weapon" },
+  lightMelee:   { label: "Light Melee", group: "Weapon" },
+  heavyMelee:   { label: "Heavy Melee", group: "Weapon" },
   // Spirit
-  spirit:       { label: "Spirit Power" },
+  spirit:       { label: "Spirit Power", group: "Spirit" },
+  cooldownReduction: { label: "Ability Cooldown", pct:true, group: "Spirit" },
+  abilityDuration: { label: "Ability Duration", pct:true, group: "Spirit" },
+  abilityRange: { label: "Ability Range", pct:true, group: "Spirit" },
+  abilityCharge: { label: "Bonus Charges", group: "Spirit" },
+  spiritLifesteal: { label: "Spirit Lifesteal", pct:true, group: "Spirit" },
   // Movement
-  moveSpeed:    { label: "Move Speed", unit: " m/s" },
-  sprintSpeed:  { label: "Sprint Speed", unit: " m/s" },
-  dashSpeed:    { label: "Dash Speed", unit: " m/s" },
+  moveSpeed:    { label: "Move Speed", unit: " m/s", group: "Movement" },
+  sprintSpeed:  { label: "Sprint Speed", unit: " m/s", group: "Movement" },
+  dashSpeed:    { label: "Dash Speed", unit: " m/s", group: "Movement" },
   // Progress
-  boons:        { label: "Boons" },
-  souls:        { label: "Souls" },
+  boons:        { label: "Level", group: "Progress" },
+  souls:        { label: "Souls", group: "Progress" },
 };
 const INVEST_SHOPS = [
   { cat: "Weapon",   table: WEAPON_SHOP_INVEST_BONUS,   pct: true,  label: "Weapon Damage" },
@@ -32,30 +39,40 @@ const INVEST_SHOPS = [
 
 for (const key in roster) {
   heroSelect.add(new Option(roster[key].name, key));
+  enemySelect.add(new Option(roster[key].name, key));
 }
 const sortedItemKeys = Object.keys(SHOP_ITEMS).sort((a, b) => SHOP_ITEMS[a].name.localeCompare(SHOP_ITEMS[b].name));
-for (let i = 0; i < 12; i++) {
-    const sel = document.createElement("select");
-    sel.add(new Option("- Select item -", ""));
-    sel.addEventListener("change", update);
-    for (const cat of ITEM_CATEGORIES) {
-        for (const tier of ITEM_TIERS) {
-            const group = document.createElement("optgroup");
-            group.label = cat + "-" + tier;
-            const colors = ITEM_COLORS[cat][tier];
-            for (const key of sortedItemKeys.filter(k => SHOP_ITEMS[k].category === cat && SHOP_ITEMS[k].cost === tier)) {
-                const opt = new Option(SHOP_ITEMS[key].name, key);
-                opt.title = SHOP_ITEMS[key].passiveEffect ?? "";
-                opt.style.backgroundColor = colors.bg;
-                opt.style.color = colors.text;
-                group.appendChild(opt);
+function createItemSlots(box) {
+    const selects = [];
+    for (let i = 0; i < 12; i++) {
+        const sel = document.createElement("select");
+        sel.add(new Option("- Select item -", ""));
+        sel.addEventListener("change", update);
+        
+        for (const cat of ITEM_CATEGORIES) {
+            for (const tier of ITEM_TIERS) {
+                const group = document.createElement("optgroup");
+                group.label = cat + "-" + tier;
+                const colors = ITEM_COLORS[cat][tier];
+                for (const key of sortedItemKeys.filter(k => SHOP_ITEMS[k].category === cat && SHOP_ITEMS[k].cost === tier)) {
+                    const opt = new Option(SHOP_ITEMS[key].name, key);
+                    opt.title = SHOP_ITEMS[key].passiveEffect ?? "";
+                    opt.style.backgroundColor = colors.bg;
+                    opt.style.color = colors.text;
+                    group.appendChild(opt);
+                }
+                sel.appendChild(group);
             }
-            sel.appendChild(group);
         }
+        box.appendChild(sel);          
+        selects.push(sel);
+        
     }
-    itemsBox.appendChild(sel);          
-    itemSelects.push(sel);
-}                                        
+        return selects;     
+}                                   
+const itemSelects = createItemSlots(itemsBox);
+const enemySelects = createItemSlots(document.querySelector("#enemy-items"));
+
 
 const shopBox = document.querySelector("#shop");   
 
@@ -125,7 +142,7 @@ function colorSelect(sel){
     .filter(k => k.startsWith("bonus") && item[k] !== 0)
     .map(k => {
       const label = STAT_LABELS[k] ?? " " + k;
-      const v = label.startsWith("%") ? round2(item[k] * 100) : item[k]                             
+      const v = label.startsWith("%") ? round2(item[k] * 100) : item[k];                             
       return "+" + v + label;
     })
     .join("\n") : "";
@@ -144,14 +161,26 @@ function update() {
     const hero = roster[heroSelect.value];  
     if (!hero) return;     
     const build = itemSelects
-        .map(sel => sel.value) 
-        .filter(v => v !== "")  
-    itemSelects.forEach(colorSelect);                    
+        .map(sel => sel.value)
+        .filter(v => v !== "");  
+    itemSelects.forEach(colorSelect);
+
+
+
     const base = buildStats(hero, []);
     const cur  = buildStats(hero, build);
-    const rows = Object.keys(STAT_DISPLAY).map(k =>
-        `<tr><td>${STAT_DISPLAY[k].label}</td><td>${formatStat(k, base[k])}</td><td>${formatStat(k, cur[k])}</td><td>${formatStat(k, cur[k] - base[k])}</td></tr>`
-    );
+    
+
+    const keys = Object.keys(STAT_DISPLAY);
+    const rows = keys.map((k, i) => {
+        const group = STAT_DISPLAY[k].group;
+        const prevGroup = STAT_DISPLAY[keys[i -1]]?.group;
+        const header = group !== prevGroup
+            ? `<tr><th colspan="4" class="group-header">${group}</th></tr>`
+        : "";
+      return header + `<tr><td>${STAT_DISPLAY[k].label}</td><td>${formatStat(k, base[k])}</td><td>${formatStat(k, cur[k])}</td><td>${formatStat(k, cur[k] - base[k])}</td></tr>`;
+    });
+
     const b = buildBonuses(build);
     const investRows = INVEST_SHOPS.map(shop => {
     const souls = b.categorySouls[shop.cat];
@@ -165,6 +194,7 @@ function update() {
     });
         document.querySelector("#stats").innerHTML =
         "<tr><th>Stat</th><th>Base</th><th>Build</th><th>Change</th></tr>" + rows.join("");
+        
         document.querySelector("#invest").innerHTML = 
         "<tr><th>Shop</th><th>Souls</th><th>Bonus</th><th>Next</th></tr>" + investRows.join("") +
         `<tr><th>Total</th><th>${b.cost}</th><th></th><th></th></tr>`;
@@ -185,7 +215,7 @@ function update() {
         const tiers = Number(ui.tier.value);
         const r = abilityResult(ability, tiers, cur.spirit, b, cur.weaponPct);
 
-        ui.name.textContent = ability.name
+        ui.name.textContent = ability.name;
         ui.desc.textContent = HERO_ABILITY_DESCRIPTIONS[heroKey]?.[abilityKey] ?? "";
 
         const all = { ...abilityAt(ability, tiers), ...r };
@@ -194,6 +224,22 @@ function update() {
             .map(k => k + ": " + round2(all[k]))
             .join("<br>");
     });
+    const enemy = roster[enemySelect.value];
+    if (!enemy) return;
+    const enemyBuild = enemySelects
+        .map(sel => sel.value)
+        .filter(v => v !== "");
+    enemySelects.forEach(colorSelect);
+    const eCur = buildStats(enemy, enemyBuild);
+    const youVsEnemy = timeToKill(cur, hero, eCur);
+    const enemyVsYou = timeToKill(eCur, enemy, cur);
+    const ttkRow = (label, r) =>
+      `<tr><td>${label}</td><td>${round2(r.dps)}</td><td>${round2(r.effectiveHP)}</td><td>${round2(r.ttk)}s</td></tr>`;
+
+    document.querySelector("#ttk").innerHTML =
+      "<tr><th>Matchup</th><th>DPS</th><th>Target Eff. HP</th><th>Time to Kill</th></tr>" +
+      ttkRow("You → Enemy", youVsEnemy) +
+      ttkRow("Enemy → You", enemyVsYou);
 }
 //---- Tabs ----
 const tabs = document.querySelectorAll(".tab");
@@ -208,6 +254,7 @@ tabs.forEach(tab => tab.addEventListener("click", () => {
 
 }));
 heroSelect.addEventListener("change", update);
+enemySelect.addEventListener("change",update);
 update();
 
 

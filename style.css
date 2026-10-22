@@ -31,7 +31,20 @@ body {
 
 .panel h2 {
   margin: 0 0 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #444;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+}
+
+.group-header {
+  background: #e8e8e8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  padding-top: 10px;
 }
 
 table { border-collapse: collapse; }

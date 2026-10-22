@@ -6816,7 +6816,20 @@ function buildStats(hero, build) {
 	stats.bulletPerSec *= boostMultiplier(b.bonusFireRate);
 	stats.weaponPct = totalWeaponPct;
 
+	//---Spirit Stats---
+	stats.cooldownReduction = b.bonusAbilityCooldown
+	stats.abilityDuration = b.bonusAbilityDuration
+	stats.abilityRange = b.bonusAbilityRange
+	stats.abilityCharge = b.bonusAbilityCharges
+	stats.spiritLifesteal = b.bonusSpiritLifeSteal
+	stats.debuffResistance = b.bonusDebuffResistance
+
 	
 	
 	return stats;
+}
+function timeToKill(attacker, hero, target) {
+	const dps = attacker.bulletDmg * hero.pelletCount * attacker.bulletPerSec
+	const effectiveHP = target.hp / (1 - target.bulletResist)
+	return { dps, effectiveHP, ttk: effectiveHP / dps };
 }
